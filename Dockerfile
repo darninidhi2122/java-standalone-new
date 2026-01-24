@@ -1,7 +1,21 @@
-FROM maven
+FROM maven:3.9.9-eclipse-temurin-17 AS builder
 
-COPY . /app
+RUN apt-get update && apt-get upgrade -y 
 
-RUN cd /app && mvn package
+WORKDIR /java-standalone/
 
-ENTRYPOINT ["java", "-jar", "/app/target/demo-0.0.1-SNAPSHOT.jar"]
+COPY . .
+
+RUN mvn clean package -DskipTests
+
+FROM eclipse-temurin:17-jre
+
+WORKDIR /java-standalone/
+
+COPY --from=builder /java-standalone/target/*.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT [ "java", "-jar", "app.jar" ]
+
+CMD [ "--special" ]
